@@ -1,0 +1,136 @@
+\documentclass[11pt]{article}
+\usepackage{latexsym}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{epsfig}
+\usepackage{graphicx}
+
+\newcommand{\handout}[5]{
+  \noindent
+  \begin{center}
+  \framebox{
+    \vbox{
+      \hbox to 5.78in { {\bf ICS 443: Parallel Algorithms} \hfill #2 }
+      \vspace{4mm}
+      \hbox to 5.78in { {\Large \hfill #5  \hfill} }
+      \vspace{2mm}
+      \hbox to 5.78in { {\em #3 \hfill #4} }
+    }
+  }
+  \end{center}
+  \vspace*{4mm}
+}
+\newcommand{\lecture}[4]{\handout{#1}{#2}{#3}{Scribes: #4}{Lecture #1}}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{observation}[theorem]{Observation}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{fact}[theorem]{Fact}
+\newtheorem{assumption}[theorem]{Assumption}
+
+% 1-inch margins, from fullpage.sty by H.Partl, Version 2, Dec. 15, 1988.
+\topmargin 0pt
+\advance \topmargin by -\headheight
+\advance \topmargin by -\headsep
+\textheight 8.9in
+\oddsidemargin 0pt
+\evensidemargin \oddsidemargin
+\marginparwidth 0.5in
+\textwidth 6.5in
+
+\parindent 0in
+\parskip 1.5ex
+%\renewcommand{\baselinestretch}{1.25}
+
+\begin{document}
+
+\lecture{9 --- September 25, 2017}{Fall 2017}{Prof.\ Nodari Sitchinava}{Isaac DeMello, Brandon Doan, Robert Figgs}
+
+\section{Overview}
+
+In the last lecture we detailed an algorithm that finds the minimum of an array in O$(\log_2(\log_2(n)))$ time, and with O$(n(\log_2(\log_2(n)))$ work.
+
+In this lecture we define a work-efficient algorithm that finds the minimum in O$(\log_2(\log_2(n)))$ and with O$(n)$ work. We also begin to look at searching algorithms.  \ldots.
+
+\section{Work Efficient Min}
+
+We begin by breaking down the algorithm into parts of size k, where k = O$(\log_2(\log_2(n)))$
+\subsection{WE-CRCW-min}
+In order to break down the size of the array and apply the previously defined CRCW-min algorithm covered in lecture 9. We use the following algorithm:
+
+\begin{algorithm}
+\caption{WE-CRCW-min$(A,n)$}
+\begin{algorithmic} 
+\STATE k = $\lceil\log_2(\log_2(n))\rceil$
+\STATE n' = $\lceil n/k \rceil$
+\STATE B = new array of size n'
+\FOR {$i=1$ to $n'$ in parallel}
+	\STATE {B[i]=A[(i-1)k+1]}
+	\FOR {$j = (i-1)k+2$ to $ik$ in parallel}
+    \STATE $B[i] = min(B[i], A[j])$
+	\ENDFOR
+\ENDFOR
+\RETURN CRCW-min(B, 1, n')
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsubsection{WE-CRCW-min Algorithmic Analysis}
+The first 3 lines of the algorithm can be done in constant time, this means that the runtime of the algorithm is dominated by the for-loop. 
+
+
+
+\paragraph{Work Analysis}: Work of this algorithm can be shown as follows:
+
+
+$\sum_{i=1}^{n} \sum_{j=(i-1)k+2}^{ik}O(1)$ = 
+$\theta(n'*k)$ = 
+$\theta((n/k) * k)$ = $\theta(n)$	
+
+\section{Searching}
+In this part of the lecture we look at how to both efficiently and inefficiently search through an array for a specified element.
+
+\subsection{Inefficient Search}
+\begin{algorithm}
+\caption{Searching$(A, n, x)$}
+\begin{algorithmic}
+\STATE answer = -1
+\FOR {$i=1$ to $n$ in parallel}
+\STATE if A[mid] ==x
+	\STATE answer = i 
+\ENDFOR
+\RETURN answer
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Recursive Search}
+While searching a sorted input, it is impossible to improve the run time of the search. The algorithm is as follows:
+
+\begin{algorithm}
+\caption{Binary-Search($A, left, r, x$)}
+\begin{algorithmic} 
+\STATE mid = $\lfloor (l + r)/2 \rfloor$
+\IF {r < l}
+	\RETURN -1
+\ENDIF
+\IF{$A[mid] == x$}
+	\RETURN x
+\ENDIF
+\IF {x > A[mid]}
+	\RETURN return Binary-Search($A, l, mid+1, r, x$)
+\ELSE
+	\RETURN Binary-Search($A, l, mid-1, x$)
+\ENDIF
+\end{algorithmic}
+\end{algorithm}
+
+
+\end{document}
+                                       
