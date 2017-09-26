@@ -1,0 +1,190 @@
+\documentclass[11pt]{article}
+\usepackage{latexsym}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\newcommand{\handout}[5]{
+  \noindent
+  \begin{center}
+  \framebox{
+    \vbox{
+      \hbox to 5.78in { {\bf ICS 443: Parallel Algorithms} \hfill #2 }
+      \vspace{4mm}
+      \hbox to 5.78in { {\Large \hfill #5  \hfill} }
+      \vspace{2mm}
+      \hbox to 5.78in { {\em #3 \hfill #4} }
+    }
+  }
+  \end{center}
+  \vspace*{4mm}
+}
+
+\newcommand{\lecture}[4]{\handout{#1}{#2}{#3}{Scribe: #4}{Lecture #1}}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{observation}[theorem]{Observation}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{fact}[theorem]{Fact}
+\newtheorem{assumption}[theorem]{Assumption}
+
+% 1-inch margins, from fullpage.sty by H.Partl, Version 2, Dec. 15, 1988.
+\topmargin 0pt
+\advance \topmargin by -\headheight
+\advance \topmargin by -\headsep
+\textheight 8.9in
+\oddsidemargin 0pt
+\evensidemargin \oddsidemargin
+\marginparwidth 0.5in
+\textwidth 6.5in
+
+\parindent 0in
+\parskip 1.5ex
+%\renewcommand{\baselinestretch}{1.25}
+
+\begin{document}
+
+\lecture{9 --- September 25, 2017}{Fall 2017}{Prof.\ Nodari Sitchinava}{Isaac DeMello, Brandon Doan, Robert Figgs}
+
+\section{Overview}
+
+In the last lecture we detailed an algorithm that finds the minimum of an array in O$(\log_2(\log_2(n)))$ time, and with O$(n(\log_2(\log_2(n)))$ work.
+
+In this lecture we define a work-efficient algorithm that finds the minimum in O$(\log_2(\log_2(n)))$ and with O$(n)$ work. We also begin to look at searching algorithms.  \ldots.
+
+\section{Work Efficient Min}
+
+We begin by breaking down the algorithm into parts of size k, where k = O$(\log_2(\log_2(n)))$
+\subsection{WE-CRCW-min}
+In order to break down the size of the array and apply the previously defined CRCW-min algorithm covered in lecture 9. We use the following algorithm:
+
+\begin{algorithm}
+\caption{WE-CRCW-min$(A,n)$}
+\begin{algorithmic}
+\STATE k = $\lceil\log_2(\log_2(n))\rceil$
+\STATE n' = $\lceil n/k \rceil$
+\STATE B = new array of size n'
+\FOR {$i=1$ to $n'$ in parallel}
+	\STATE {B[i]=A[(i-1)k+1]}
+	\FOR {$j = (i-1)k+2$ to $ik$ in parallel}
+    \STATE $B[i] = min(B[i], A[j])$
+	\ENDFOR
+\ENDFOR
+\RETURN CRCW-min(B, 1, n')
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsubsection{WE-CRCW-min Algorithmic Analysis}
+The first 3 lines of the algorithm can be done in constant time, this means that the runtime of the algorithm is dominated by the for-loop.
+
+
+
+\paragraph{Work Analysis}: Work of this algorithm can be shown as follows:
+
+
+$\sum_{i=1}^{n} \sum_{j=(i-1)k+2}^{ik}O(1)$ =
+$\theta(n'*k)$ =
+$\theta((n/k) * k)$ = $\theta(n)$
+
+\section{Searching}
+
+We start with a trivial parallel searching algorithm. Note that this algorithm assumes that every element in the array is distinct. This algorithm will also return a value of -1 if the element is not found in the array.
+
+\begin{algorithm}
+\caption{parallel-search$(A,n)$}
+\begin{algorithmic}
+\STATE answer = -1
+\FOR {$i=1$ to $n$ in parallel}
+	\IF{A[i] == x}
+	    \STATE answer = i
+	\ENDIF
+\ENDFOR
+\RETURN answer
+\end{algorithmic}
+\end{algorithm}
+
+We can see that because this all runs in parallel, our run time is $T_\infty(n) = O(1)$ and our work is $W(n) = O(n)$
+
+If we plug these values into Brent's scheduling principle we get
+$T_P(n) = O(\frac{n}{p}+1)$ This isn't a fantastic run time so lets see if we can make this any better. We'll start by reviewing the sequential algorithms for Binary Search, and Binary Search Trees. Note that these two algorithms assume that the input is sorted.
+
+\subsection{Binary Search}
+Binary search is a sequential algorithm. It can only be used on a pre-sorted array. This algorithm returns the index of the of the element if it is found between the left and right indices . Otherwise it will return -1.
+\pagebreak
+
+
+\begin{algorithm}
+\caption{Binary-Search$(A,l,r,x)$}
+\begin{algorithmic}
+\IF{$r < l$}
+    \RETURN -1
+\ELSE
+    \STATE mid = $\lfloor\frac{l+r}{2}\rfloor$
+    \IF{$A[mid] == x$}
+        \RETURN mid
+    \ELSIF{$x < A[mid]$}
+        \RETURN Binary-Search($A,l,mid-1,x$)
+    \ELSE
+        \RETURN Binary-Search($A,mid+1,r,x$)
+    \ENDIF
+\ENDIF
+\end{algorithmic}
+\end{algorithm}
+
+The run time for this algorithm is $T(n) = T(\frac{n}{2}) + O(1)$. Using master theorem we get $T(n) = O(\log n)$
+
+
+\subsection{Binary Search Tree}
+A binary search tree is a special type of binary tree. The only difference is that in binary search tree, the children on the left of the node all are less than the value of the node, and the children on the right side of the node are all greater than the node. To search through the Binary Search Tree we can use the following sequential algorithm. Note that this algorithm returns nil if the element is not found.
+
+\begin{algorithm}
+\caption{BST-Search$(root,x)$}
+\begin{algorithmic}
+\IF{$root == nil$ or $root.key == x$}
+    \RETURN root
+\ELSIF{$x < root.key$}
+    \RETURN BST-Search($root.left,x$)
+\ELSE
+    \RETURN BST-Search($root.right,x$)
+\ENDIF
+\end{algorithmic}
+\end{algorithm}
+
+The run-time of this algorithm depends on how well balanced the binary search tree was before running this algorithm.
+
+\paragraph{Question:}
+How would you use boldface?
+
+\paragraph{Example:}
+This is an example showing how to use boldface to
+help organize your lectures.
+
+
+\paragraph{Some Formatting.}
+Here is some formatting that you can use in your notes:
+\begin{itemize}
+\item {\em Item One} -- This is the first item.
+\item {\em Item Two} -- This is the second item.
+\item \dots and here are other items.
+\end{itemize}
+
+If you need to number things, you can use this style:
+\begin{enumerate}
+\item {\em Item One} -- Again, this is the first item.
+\item {\em Item Two} -- Again, this is the second item.
+\item \dots and here are other items.
+\end{enumerate}
+
+%\bibliography{mybib}
+\bibliographystyle{alpha}
+
+\end{document}
