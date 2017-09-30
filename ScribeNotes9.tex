@@ -100,7 +100,7 @@ $\theta((n/k) * k)$ = $\theta(n)$
 We start with a trivial parallel searching algorithm. Note that this algorithm assumes that every element in the array is distinct. This algorithm will also return a value of -1 if the element is not found in the array.
 
 \begin{algorithm}
-\caption{parallel-search$(A,n)$}
+\caption{parallel-search$(A,n,x)$}
 \begin{algorithmic}
 \STATE answer = -1
 \FOR {$i=1$ to $n$ in parallel}
@@ -161,28 +161,60 @@ A binary search tree is a special type of binary tree. The only difference is th
 
 The run-time of this algorithm depends on how well balanced the binary search tree was before running this algorithm.
 
-\paragraph{Question:}
-How would you use boldface?
+\section{Parallel Search w/ parallel predecessor algorithm}
+In the previous parallel searching algorithm, if the element being searched for was not in the array, it would return a -1 value. Instead for our purposes, we can utilize a predecessor algorithm to provide us with the index of the largest element $\leq$ x, in the case where x was not found within the array. This will provide useful later on when implementing a work-efficient parallel version of the Mergesort algorithm.
 
-\paragraph{Example:}
-This is an example showing how to use boldface to
-help organize your lectures.
+We also went over how a binary search works with an array as well as a binary tree. One benefit of having multiple processors is the ability to increase the size of the tree. For example we are able to store more entries and children nodes based upon the amount of processors at our disposal. For p amount of processors we have p amount of entries per node, and p + 1 children.
+
+\subsection{Parallel Predecessor}
+ The following algorithm is a sequential algorithm that is used to find the predecessor within a sorted array.
+
+\begin{algorithm}
+\caption{par-predecessor$(A,x)$}
+\begin{algorithmic}
+\STATE answer = 0
+\FOR {$i=1$ to $n$ in parallel}
+	\IF{A[i] = x}
+    	\RETURN i
+	\ELSIF{A[i] $<$ x $\&\&$ (A[i = 1] $>$ x $\&\&$ i $<$ n)}
+    	\STATE answer = i
+	\ENDIF
+	\IF{A[n] $<$ x}
+    	\STATE answer = n
+	\ENDIF
+	\RETURN answer
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+The runtime for par-predecessor is $T(n) = O(1)$, as the algorithm checks all n elements at the same time in parallel and all the operations within are constant.
+Using the same logic, the work for par-predecessor will be. $$\sum_{i=1}^{n}O(1)$$
+$W(n) = O(n)$
+
+If we were to use a multi branch search tree algorithm similar to the binary search tree algorithm, we would be able to find the predecessor in $\log_p n$ runtime. Where p is the amount of processors.
 
 
-\paragraph{Some Formatting.}
-Here is some formatting that you can use in your notes:
-\begin{itemize}
-\item {\em Item One} -- This is the first item.
-\item {\em Item Two} -- This is the second item.
-\item \dots and here are other items.
-\end{itemize}
+\subsection{Revised Parallel Search}
 
-If you need to number things, you can use this style:
-\begin{enumerate}
-\item {\em Item One} -- Again, this is the first item.
-\item {\em Item Two} -- Again, this is the second item.
-\item \dots and here are other items.
-\end{enumerate}
+Now we can implement our revised parallel search on a multi-branched tree with multiple entries per node, while using a par-predecessor algorithm. Before starting we can specify some of the properties of the tree. The node object shall contain a key and child such that, V.key[i] will be the index of a specific entry in a particular node and v.child[i] will be a pointer to a child of the node. The following algorithm takes three arguments, V the node, p the amount of processors, and x the element being searched for. A reminder that the size of key is equal to p, and child is p + 1 in size.
+
+\begin{algorithm}
+\caption{Parallel-Search w/predecessor(Node V, p, x)}
+\begin{algorithmic}
+\IF{V == nil}
+	\RETURN "Not Found"
+\ENDIF
+\STATE $child\_idx = par-predecessor(V.key, p, x)$
+\IF{$(child\_idx \quad > \quad 0 \quad \&\& \quad V.key[child\_idx] == x)$}
+	\RETURN (V.key[child\_idx])
+\ELSE
+	\RETURN Parallel-Search(V.child[child\_idx], p, x)
+\ENDIF
+\end{algorithmic}
+\end{algorithm}
+
+The run-time of this algorithm, like the binary search tree depends on how well balanced it was before running the algorithm.
+
 
 %\bibliography{mybib}
 \bibliographystyle{alpha}
