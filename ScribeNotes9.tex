@@ -52,29 +52,29 @@
 
 \begin{document}
 
-\lecture{9 --- September 25, 2017}{Fall 2017}{Prof.\ Nodari Sitchinava}{Isaac DeMello, Brandon Doan, Robert Figgs}
+\lecture{10 --- September 25, 2017}{Fall 2017}{Prof.\ Nodari Sitchinava}{Isaac DeMello, Brandon Doan, Robert Figgs}
 
 \section{Overview}
 
-In the last lecture we detailed an algorithm that finds the minimum of an array in O$(\log_2(\log_2(n)))$ time, and with O$(n(\log_2(\log_2(n)))$ work.
+In the last lecture we detailed an algorithm that finds the minimum of an array in O$(\log(\log(n)))$ time, and with O$(n(\log(\log(n)))$ work.
 
-In this lecture we define a work-efficient algorithm that finds the minimum in O$(\log_2(\log_2(n)))$ and with O$(n)$ work. We also begin to look at searching algorithms.  \ldots.
+In this lecture we define a work-efficient algorithm that finds the minimum in O$(\log(\log(n)))$ and with O$(n)$ work. We also begin to look at searching algorithms.  \ldots.
 
 \section{Work Efficient Min}
 
-We begin by breaking down the algorithm into parts of size k, where k = O$(\log_2(\log_2(n)))$
+We begin by breaking down the algorithm into parts of size k, where k = O$(\log(\log(n)))$
 \subsection{WE-CRCW-min}
 In order to break down the size of the array and apply the previously defined CRCW-min algorithm covered in lecture 9. We use the following algorithm:
 
 \begin{algorithm}
 \caption{WE-CRCW-min$(A,n)$}
 \begin{algorithmic}
-\STATE k = $\lceil\log_2(\log_2(n))\rceil$
-\STATE n' = $\lceil n/k \rceil$
+\STATE $k = \lceil\log(\log(n))\rceil$
+\STATE $n' = \lceil n/k \rceil$
 \STATE B = new array of size n'
-\FOR {$i=1$ to $n'$ in parallel}
+\FOR {$i= 1$ to $n'$ {\bf in parallel}}
 	\STATE {B[i]=A[(i-1)k+1]}
-	\FOR {$j = (i-1)k+2$ to $ik$ in parallel}
+	\FOR {$j = (i-1)k+2$ to $ik$ {\bf in parallel}}
     \STATE $B[i] = min(B[i], A[j])$
 	\ENDFOR
 \ENDFOR
@@ -85,15 +85,16 @@ In order to break down the size of the array and apply the previously defined CR
 
 \subsubsection{WE-CRCW-min Algorithmic Analysis}
 The first 3 lines of the algorithm can be done in constant time, this means that the runtime of the algorithm is dominated by the for-loop.
-
+The dominating for-loop has a runtime of O$(\log(\log(n)))$ therefore the overall time of this algorithm is $T_\infty(n) = O(\log(\log(n)))$
+ 
 
 
 \paragraph{Work Analysis}: Work of this algorithm can be shown as follows:
 
 
 $\sum_{i=1}^{n} \sum_{j=(i-1)k+2}^{ik}O(1)$ =
-$\theta(n'*k)$ =
-$\theta((n/k) * k)$ = $\theta(n)$
+$\Theta(n'k)$ =
+$\Theta((n/k) k) = \Theta(n)$
 
 \section{Searching}
 
@@ -103,7 +104,7 @@ We start with a trivial parallel searching algorithm. Note that this algorithm a
 \caption{parallel-search$(A,n,x)$}
 \begin{algorithmic}
 \STATE answer = -1
-\FOR {$i=1$ to $n$ in parallel}
+\FOR {$i=1 to n$ {\bf in parallel}}
 	\IF{A[i] == x}
 	    \STATE answer = i
 	\ENDIF
@@ -162,7 +163,7 @@ A binary search tree is a special type of binary tree. The only difference is th
 The run-time of this algorithm depends on how well balanced the binary search tree was before running this algorithm.
 
 \section{Parallel Search w/ parallel predecessor algorithm}
-In the previous parallel searching algorithm, if the element being searched for was not in the array, it would return a -1 value. Instead for our purposes, we can utilize a predecessor algorithm to provide us with the index of the largest element $\leq$ x, in the case where x was not found within the array. This will provide useful later on when implementing a work-efficient parallel version of the Mergesort algorithm.
+In the previous parallel searching algorithm, if the element being searched for was not in the array, it would return a -1 value. Instead for our purposes, we can utilize a predecessor algorithm to provide us with the index of the largest element $\leq$ x, in the case where x was not found within the array. This will provide useful later on when implementing a revised parallel search algorithm.
 
 We also went over how a binary search works with an array as well as a binary tree. One benefit of having multiple processors is the ability to increase the size of the tree. For example we are able to store more entries and children nodes based upon the amount of processors at our disposal. For p amount of processors we have p amount of entries per node, and p + 1 children.
 
@@ -170,11 +171,11 @@ We also went over how a binary search works with an array as well as a binary tr
  The following algorithm is a sequential algorithm that is used to find the predecessor within a sorted array.
 
 \begin{algorithm}
-\caption{par-predecessor$(A,x)$}
+\caption{par-predecessor$(A, n, x)$}
 \begin{algorithmic}
 \STATE answer = 0
 \FOR {$i=1$ to $n$ in parallel}
-	\IF{A[i] = x}
+	\IF{$A[i] = x$}
     	\RETURN i
 	\ELSIF{A[i] $<$ x $\&\&$ (A[i = 1] $>$ x $\&\&$ i $<$ n)}
     	\STATE answer = i
@@ -191,12 +192,12 @@ The runtime for par-predecessor is $T(n) = O(1)$, as the algorithm checks all n 
 Using the same logic, the work for par-predecessor will be. $$\sum_{i=1}^{n}O(1)$$
 $W(n) = O(n)$
 
-If we were to use a multi branch search tree algorithm similar to the binary search tree algorithm, we would be able to find the predecessor in $\log_p n$ runtime. Where p is the amount of processors.
+If we were to use a multi branch search tree algorithm similar to the binary search tree algorithm, we would be able to find the predecessor in  constant runtime. 
 
 
 \subsection{Revised Parallel Search}
 
-Now we can implement our revised parallel search on a multi-branched tree with multiple entries per node, while using a par-predecessor algorithm. Before starting we can specify some of the properties of the tree. The node object shall contain a key and child such that, V.key[i] will be the index of a specific entry in a particular node and v.child[i] will be a pointer to a child of the node. The following algorithm takes three arguments, V the node, p the amount of processors, and x the element being searched for. A reminder that the size of key is equal to p, and child is p + 1 in size.
+Now we can implement our revised parallel search on a multi-branched tree with multiple entries per node, while using a par-predecessor algorithm. Before starting we can specify some of the properties of the tree. The node object shall contain a key and child such that, V.key[i] will be the index of a specific entry in a particular node and v.child[i] will be a pointer to a child of the node. The following algorithm takes three arguments, V the node, p the amount of processors, and x the element being searched for. A reminder that the size of key is equal to p, and the amount of children is p + 1 in size.
 
 \begin{algorithm}
 \caption{Parallel-Search w/predecessor(Node V, p, x)}
@@ -213,10 +214,10 @@ Now we can implement our revised parallel search on a multi-branched tree with m
 \end{algorithmic}
 \end{algorithm}
 
-The run-time of this algorithm, like the binary search tree depends on how well balanced it was before running the algorithm. In the case of a balanced tree, the height is $O(\log_p n)$ therefore, the runtime will be  $T(n) = O(\log_p n)$ 
+The algorithm will search one node at each level in constant runtime. Because the amount of children per node in the tree is based upon the amount of processors, the height will correspond directly to the value of p. Therefore the height of the tree is $\log_{p+1} n$, as there is p + 1 branches. The run-time of this algorithm, like the binary search tree depends on how well balanced it was before running the algorithm. In the case of a balanced tree, the height is $O(\log_{p+1} n)$ therefore in the case of a balanced tree, the runtime will be  $T(n) = O(\log_{p+1} n)$. The worst case scenario for work is where it compares p items per level and traverses down to the lowest level. Then the work for such an algorithm can be described as $\sum_{j=0}^{\log_{p+1}}1$$\sum_{i=1}^{p}1$. Which equates to $\sum_{j=0}^{\log_{p+1}}p$ or $W(n) = O(p\log_{p+1} n)$
 
 
 %\bibliography{mybib}
 \bibliographystyle{alpha}
 
-\end{document}
+\end{document} 
