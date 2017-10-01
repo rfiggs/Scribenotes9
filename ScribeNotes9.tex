@@ -86,7 +86,7 @@ In order to break down the size of the array and apply the previously defined CR
 \subsubsection{WE-CRCW-min Algorithmic Analysis}
 The first 3 lines of the algorithm can be done in constant time, this means that the runtime of the algorithm is dominated by the for-loop.
 The dominating for-loop has a runtime of O$(\log(\log(n)))$ therefore the overall time of this algorithm is $T_\infty(n) = O(\log(\log(n)))$
- 
+
 
 
 \paragraph{Work Analysis}: Work of this algorithm can be shown as follows:
@@ -104,7 +104,7 @@ We start with a trivial parallel searching algorithm. Note that this algorithm a
 \caption{parallel-search$(A,n,x)$}
 \begin{algorithmic}
 \STATE answer = -1
-\FOR {$i=1 to n$ {\bf in parallel}}
+\FOR {$i=1~to~n$ {\bf in parallel}}
 	\IF{A[i] == x}
 	    \STATE answer = i
 	\ENDIF
@@ -119,7 +119,7 @@ If we plug these values into Brent's scheduling principle we get
 $T_P(n) = O(\frac{n}{p}+1)$ This isn't a fantastic run time so lets see if we can make this any better. We'll start by reviewing the sequential algorithms for Binary Search, and Binary Search Trees. Note that these two algorithms assume that the input is sorted.
 
 \subsection{Binary Search}
-Binary search is a sequential algorithm. It can only be used on a pre-sorted array. This algorithm returns the index of the of the element if it is found between the left and right indices . Otherwise it will return -1.
+Binary search is a sequential algorithm. It can only be used on a pre-sorted array. This algorithm returns the index of the element if it is found between the left and right indices . Otherwise it will return -1.
 \pagebreak
 
 
@@ -145,7 +145,7 @@ The run time for this algorithm is $T(n) = T(\frac{n}{2}) + O(1)$. Using master 
 
 
 \subsection{Binary Search Tree}
-A binary search tree is a special type of binary tree. The only difference is that in binary search tree, the children on the left of the node all are less than the value of the node, and the children on the right side of the node are all greater than the node. To search through the Binary Search Tree we can use the following sequential algorithm. Note that this algorithm returns nil if the element is not found.
+A binary search tree is a special type of binary tree. The only difference is that in binary search tree, the children on the left of the node are all less than the value of the node, and the children on the right side of the node are all greater than the node. To search through the Binary Search Tree we can use the following sequential algorithm. Note that this algorithm returns nil if the element is not found.
 
 \begin{algorithm}
 \caption{BST-Search$(root,x)$}
@@ -160,7 +160,7 @@ A binary search tree is a special type of binary tree. The only difference is th
 \end{algorithmic}
 \end{algorithm}
 
-The run-time of this algorithm depends on how well balanced the binary search tree was before running this algorithm.
+The run-time of this algorithm depends on how well balanced the binary search tree was before running this algorithm. More specifically this algorithm depends on the depth of this tree. A well balanced binary tree has a depth of $O(\log n)$, meaning that the BST-Search algorithm has a run-time of $O(\log n)$.
 
 \section{Parallel Search w/ parallel predecessor algorithm}
 In the previous parallel searching algorithm, if the element being searched for was not in the array, it would return a -1 value. Instead for our purposes, we can utilize a predecessor algorithm to provide us with the index of the largest element $\leq$ x, in the case where x was not found within the array. This will provide useful later on when implementing a revised parallel search algorithm.
@@ -192,7 +192,7 @@ The runtime for par-predecessor is $T(n) = O(1)$, as the algorithm checks all n 
 Using the same logic, the work for par-predecessor will be. $$\sum_{i=1}^{n}O(1)$$
 $W(n) = O(n)$
 
-If we were to use a multi branch search tree algorithm similar to the binary search tree algorithm, we would be able to find the predecessor in  constant runtime. 
+If we were to use a multi branch search tree algorithm similar to the binary search tree algorithm, we would be able to find the predecessor in  constant runtime.
 
 
 \subsection{Revised Parallel Search}
@@ -220,4 +220,4 @@ The algorithm will search one node at each level in constant runtime. Because th
 %\bibliography{mybib}
 \bibliographystyle{alpha}
 
-\end{document} 
+\end{document}
